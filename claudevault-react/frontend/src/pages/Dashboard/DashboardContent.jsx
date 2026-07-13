@@ -3,8 +3,36 @@ import SectionHeader from '../../components/common/SectionHeader';
 import QuickActions from '../../components/common/QuickActions';
 import FolderGrid from '../../components/common/FolderGrid';
 import EmptyState from '../../components/common/EmptyState';
+import { useDashboard } from '../../hooks/useDashboard';
+import WelcomeCard from '../../components/dashboard/WelcomeCard';
+import StatisticsGrid from '../../components/dashboard/StatisticsGrid';
+import RecentFiles from '../../components/dashboard/RecentFiles';
+import ActivityFeed from '../../components/dashboard/ActivityFeed';
 
 const DashboardContent = () => {
+  const { overview, recentFiles, activity, loading, error, refreshDashboard } = useDashboard();
+
+  if (loading) {
+    return (
+      <div className="content-area" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="content-area" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', gap: '16px' }}>
+        <p>Unable to load dashboard.</p>
+        <button className="btn-primary" onClick={refreshDashboard}>Retry</button>
+      </div>
+    );
+  }
+
+  const hasFiles = recentFiles && recentFiles.length > 0;
+  const hasActivity = activity && activity.length > 0;
+  const showEmptyState = !hasFiles && !hasActivity && overview?.statistics?.total_files === 0 && overview?.statistics?.total_folders === 0;
+
   return (
     <>
       <div className="toolbar">
@@ -21,7 +49,7 @@ const DashboardContent = () => {
           </button>
         </div>
         <div className="toolbar-info" id="toolbar-info">
-          <span>0 items</span>
+          <span>{overview?.statistics?.total_files || 0} items</span>
         </div>
       </div>
 
@@ -35,20 +63,17 @@ const DashboardContent = () => {
           </div>
         </div>
 
-        <SectionHeader title="Quick Actions" />
-        <QuickActions>
-          {/* Left empty as per rules (no mock data) */}
-        </QuickActions>
+        {overview?.user && <WelcomeCard user={overview.user} />}
+        {overview?.statistics && <StatisticsGrid statistics={overview.statistics} />}
+        
+        {hasFiles && <RecentFiles files={recentFiles} />}
+        {hasActivity && <ActivityFeed activity={activity} />}
 
-        <SectionHeader title="Folders" />
-        <FolderGrid>
-          {/* Left empty as per rules (no fake folders) */}
-        </FolderGrid>
-
-        <EmptyState />
+        {showEmptyState && <EmptyState />}
       </div>
     </>
   );
 };
 
 export default DashboardContent;
+

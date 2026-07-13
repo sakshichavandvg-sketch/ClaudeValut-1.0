@@ -11,6 +11,7 @@ const Auth = () => {
     console.log('Back clicked to go to Landing');
   };
 
+  
   let title = '';
   let subtitle = '';
 
